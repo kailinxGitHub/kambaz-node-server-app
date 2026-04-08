@@ -24,7 +24,7 @@ After changing env vars on Vercel, **redeploy** so the client bundle picks up `N
 ## Smoke tests (remote)
 
 1. Open `https://your-api.../hello` or `/lab5/welcome` — should return text.
-2. Run: `./scripts/verify-a5-labs.sh https://your-api.onrender.com`
+2. From the Next.js repo: `npm run verify:a5` (local API) or `./scripts/verify-a5-labs.sh https://your-api.onrender.com`
 3. Open deployed Next app: sign in (`iron_man` / `stark123`), open `/labs/lab5`, confirm todos load and **API Server** link in Labs TOC opens your API.
 
 ## Git branch `a5`
