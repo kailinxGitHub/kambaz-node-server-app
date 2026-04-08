@@ -20,33 +20,29 @@ const allowedOrigins = (
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-const isAllowedOrigin = (origin) => {
+const isVercelOrigin = (origin) =>
+  /^https:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.vercel\.app$/.test(origin);
+
+const corsOrigin = (origin, callback) => {
   if (!origin) {
-    return true;
+    callback(null, true);
+    return;
   }
   if (allowedOrigins.includes(origin)) {
-    return true;
+    callback(null, true);
+    return;
   }
-  try {
-    const { protocol, hostname } = new URL(origin);
-    if (
-      protocol === "https:" &&
-      hostname.endsWith(".vercel.app")
-    ) {
-      return true;
-    }
-  } catch {
-    /* ignore */
+  if (isProduction && isVercelOrigin(origin)) {
+    callback(null, true);
+    return;
   }
-  return false;
+  callback(null, false);
 };
 
 app.use(
   cors({
     credentials: true,
-    origin(origin, callback) {
-      callback(null, isAllowedOrigin(origin));
-    },
+    origin: corsOrigin,
   })
 );
 
