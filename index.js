@@ -17,12 +17,36 @@ const allowedOrigins = (
   process.env.CLIENT_URL || "http://localhost:3000,http://localhost:3001"
 )
   .split(",")
-  .map((origin) => origin.trim());
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) {
+    return true;
+  }
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+  try {
+    const { protocol, hostname } = new URL(origin);
+    if (
+      protocol === "https:" &&
+      hostname.endsWith(".vercel.app")
+    ) {
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
+};
 
 app.use(
   cors({
     credentials: true,
-    origin: allowedOrigins,
+    origin(origin, callback) {
+      callback(null, isAllowedOrigin(origin));
+    },
   })
 );
 
