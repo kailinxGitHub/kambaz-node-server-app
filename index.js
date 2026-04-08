@@ -26,17 +26,24 @@ app.use(
   })
 );
 
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "kambaz",
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      sameSite: isProduction ? "none" : "lax",
-      secure: isProduction,
-    },
-  })
-);
+const sessionOptions = {
+  secret: process.env.SESSION_SECRET || "kambaz",
+  resave: false,
+  saveUninitialized: false,
+};
+if (isProduction) {
+  app.set("trust proxy", 1);
+  sessionOptions.cookie = {
+    sameSite: "none",
+    secure: true,
+  };
+} else {
+  sessionOptions.cookie = {
+    sameSite: "lax",
+    secure: false,
+  };
+}
+app.use(session(sessionOptions));
 
 app.use(express.json());
 
