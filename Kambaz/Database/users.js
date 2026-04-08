@@ -139,4 +139,18 @@ export default [
     lastActivity: "2020-10-07",
     totalActivity: "16:00:00",
   },
+  {
+    _id: "901",
+    username: "iron_man",
+    password: "stark123",
+    firstName: "Tony",
+    lastName: "Stark",
+    email: "tony@stark.com",
+    dob: "1970-05-29",
+    loginId: "iron_man",
+    section: "S901",
+    role: "FACULTY",
+    lastActivity: "2020-10-10",
+    totalActivity: "20:00:00",
+  },
 ];
