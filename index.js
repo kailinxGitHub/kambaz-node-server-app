@@ -17,12 +17,32 @@ const allowedOrigins = (
   process.env.CLIENT_URL || "http://localhost:3000,http://localhost:3001"
 )
   .split(",")
-  .map((origin) => origin.trim());
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const isVercelOrigin = (origin) =>
+  /^https:\/\/[a-zA-Z0-9][-a-zA-Z0-9.]*\.vercel\.app$/.test(origin);
+
+const corsOrigin = (origin, callback) => {
+  if (!origin) {
+    callback(null, true);
+    return;
+  }
+  if (allowedOrigins.includes(origin)) {
+    callback(null, true);
+    return;
+  }
+  if (isProduction && isVercelOrigin(origin)) {
+    callback(null, true);
+    return;
+  }
+  callback(null, false);
+};
 
 app.use(
   cors({
     credentials: true,
-    origin: allowedOrigins,
+    origin: corsOrigin,
   })
 );
 
