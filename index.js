@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express from "express";
+import mongoose from "mongoose";
 import session from "express-session";
 import Hello from "./Hello.js";
 import Lab5 from "./Lab5/index.js";
@@ -11,6 +12,9 @@ import ModuleRoutes from "./Kambaz/modules/routes.js";
 import PeopleRoutes from "./Kambaz/people/routes.js";
 import UserRoutes from "./Kambaz/users/routes.js";
 
+const CONNECTION_STRING =
+  process.env.DATABASE_CONNECTION_STRING || "mongodb://127.0.0.1:27017/kambaz";
+mongoose.connect(CONNECTION_STRING);
 const app = express();
 const isProduction = process.env.SERVER_ENV === "production";
 const allowedOrigins = (
@@ -43,7 +47,7 @@ app.use(
   cors({
     credentials: true,
     origin: corsOrigin,
-  })
+  }),
 );
 
 const sessionOptions = {
