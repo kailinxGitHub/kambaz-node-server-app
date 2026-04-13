@@ -1,17 +1,10 @@
-import { findEnrollmentsForCourse } from "../enrollments/dao.js";
-import { withoutPassword } from "../permissions.js";
-import UsersDao from "../users/dao.js";
+import EnrollmentsDao from "../enrollments/dao.js";
 
 export default function PeopleRoutes(app) {
-  const dao = UsersDao();
+  const enrollmentsDao = EnrollmentsDao();
 
   app.get("/api/courses/:courseId/users", async (req, res) => {
-    const enrollments = findEnrollmentsForCourse(req.params.courseId);
-    const userIds = enrollments.map((enrollment) => enrollment.user);
-    const allUsers = await dao.findAllUsers();
-    const users = allUsers
-      .filter((user) => userIds.includes(String(user._id)))
-      .map((user) => withoutPassword(user.toObject()));
+    const users = await enrollmentsDao.findUsersForCourse(req.params.courseId);
     res.json(users);
   });
 }

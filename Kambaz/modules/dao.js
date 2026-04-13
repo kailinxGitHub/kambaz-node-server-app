@@ -1,37 +1,36 @@
 import { v4 as uuidv4 } from "uuid";
-import db from "../Database/index.js";
+import courseModel from "../courses/model.js";
 
-export const findModulesForCourse = (courseId) =>
-  db.modules.filter((module) => module.course === courseId);
-
-export const findModuleById = (moduleId) =>
-  db.modules.find((module) => module._id === moduleId);
-
-export const createModule = (courseId, module) => {
-  const newModule = {
-    _id: uuidv4(),
-    course: courseId,
-    name: module.name || "New Module",
-    lessons: module.lessons || [],
+export default function ModulesDao() {
+  const findModulesForCourse = async (courseId) => {
+    const course = await courseModel.findById(courseId);
+    return course ? course.modules : [];
   };
-  db.modules.push(newModule);
-  return newModule;
-};
 
-export const updateModule = (moduleId, updates) => {
-  const module = findModuleById(moduleId);
-  if (!module) {
-    return null;
-  }
-  Object.assign(module, { ...updates, _id: moduleId });
-  return module;
-};
+  const createModule = async (courseId, module) => {
+    const newModule = { ...module, _id: uuidv4() };
+    await courseModel.updateOne(
+      { _id: courseId },
+      { $push: { modules: newModule } }
+    );
+    return newModule;
+  };
 
-export const deleteModule = (moduleId) => {
-  const index = db.modules.findIndex((module) => module._id === moduleId);
-  if (index === -1) {
-    return false;
-  }
-  db.modules.splice(index, 1);
-  return true;
-};
+  const deleteModule = async (courseId, moduleId) => {
+    const status = await courseModel.updateOne(
+      { _id: courseId },
+      { $pull: { modules: { _id: moduleId } } }
+    );
+    return status;
+  };
+
+  const updateModule = async (courseId, moduleId, moduleUpdates) => {
+    const course = await courseModel.findById(courseId);
+    const module = course.modules.id(moduleId);
+    Object.assign(module, moduleUpdates);
+    await course.save();
+    return module;
+  };
+
+  return { findModulesForCourse, createModule, deleteModule, updateModule };
+}

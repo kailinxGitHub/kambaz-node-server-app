@@ -1,13 +1,9 @@
-import { findCourseById } from "../courses/dao.js";
+import ModulesDao from "./dao.js";
 import { isStaff } from "../permissions.js";
-import {
-  createModule,
-  deleteModule,
-  findModulesForCourse,
-  updateModule,
-} from "./dao.js";
 
 export default function ModuleRoutes(app) {
+  const dao = ModulesDao();
+
   const requireStaffUser = (req, res) => {
     const currentUser = req.session.currentUser;
     if (!currentUser) {
@@ -21,42 +17,35 @@ export default function ModuleRoutes(app) {
     return currentUser;
   };
 
-  app.get("/api/courses/:courseId/modules", (req, res) => {
-    res.json(findModulesForCourse(req.params.courseId));
-  });
+  const findModulesForCourse = async (req, res) => {
+    const modules = await dao.findModulesForCourse(req.params.courseId);
+    res.json(modules);
+  };
 
-  app.post("/api/courses/:courseId/modules", (req, res) => {
-    if (!requireStaffUser(req, res)) {
-      return;
-    }
-    if (!findCourseById(req.params.courseId)) {
-      res.status(404).json({ message: "Course not found" });
-      return;
-    }
-    res.status(201).json(createModule(req.params.courseId, req.body));
-  });
+  const createModuleForCourse = async (req, res) => {
+    if (!requireStaffUser(req, res)) return;
+    const newModule = await dao.createModule(req.params.courseId, req.body);
+    res.status(201).json(newModule);
+  };
 
-  app.put("/api/modules/:moduleId", (req, res) => {
-    if (!requireStaffUser(req, res)) {
-      return;
-    }
-    const updatedModule = updateModule(req.params.moduleId, req.body);
-    if (!updatedModule) {
-      res.status(404).json({ message: "Module not found" });
-      return;
-    }
-    res.json(updatedModule);
-  });
+  const updateModule = async (req, res) => {
+    if (!requireStaffUser(req, res)) return;
+    const updated = await dao.updateModule(
+      req.params.courseId,
+      req.params.moduleId,
+      req.body
+    );
+    res.json(updated);
+  };
 
-  app.delete("/api/modules/:moduleId", (req, res) => {
-    if (!requireStaffUser(req, res)) {
-      return;
-    }
-    const deleted = deleteModule(req.params.moduleId);
-    if (!deleted) {
-      res.status(404).json({ message: "Module not found" });
-      return;
-    }
-    res.json({ moduleId: req.params.moduleId });
-  });
+  const deleteModule = async (req, res) => {
+    if (!requireStaffUser(req, res)) return;
+    const status = await dao.deleteModule(req.params.courseId, req.params.moduleId);
+    res.json(status);
+  };
+
+  app.get("/api/courses/:courseId/modules", findModulesForCourse);
+  app.post("/api/courses/:courseId/modules", createModuleForCourse);
+  app.put("/api/courses/:courseId/modules/:moduleId", updateModule);
+  app.delete("/api/courses/:courseId/modules/:moduleId", deleteModule);
 }
