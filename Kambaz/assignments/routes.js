@@ -1,13 +1,9 @@
+import AssignmentsDao from "./dao.js";
 import { isStaff } from "../permissions.js";
-import {
-  createAssignment,
-  deleteAssignment,
-  findAllAssignments,
-  findAssignmentsForCourse,
-  updateAssignment,
-} from "./dao.js";
 
 export default function AssignmentRoutes(app) {
+  const dao = AssignmentsDao();
+
   const requireStaffUser = (req, res) => {
     const currentUser = req.session.currentUser;
     if (!currentUser) {
@@ -21,42 +17,37 @@ export default function AssignmentRoutes(app) {
     return currentUser;
   };
 
-  app.get("/api/assignments", (req, res) => {
-    res.json(findAllAssignments());
-  });
+  const findAllAssignments = async (req, res) => {
+    const assignments = await dao.findAllAssignments();
+    res.json(assignments);
+  };
 
-  app.get("/api/courses/:courseId/assignments", (req, res) => {
-    res.json(findAssignmentsForCourse(req.params.courseId));
-  });
+  const findAssignmentsForCourse = async (req, res) => {
+    const assignments = await dao.findAssignmentsForCourse(req.params.courseId);
+    res.json(assignments);
+  };
 
-  app.post("/api/assignments", (req, res) => {
-    if (!requireStaffUser(req, res)) {
-      return;
-    }
-    res.status(201).json(createAssignment(req.body));
-  });
+  const createAssignment = async (req, res) => {
+    if (!requireStaffUser(req, res)) return;
+    const assignment = await dao.createAssignment(req.body);
+    res.status(201).json(assignment);
+  };
 
-  app.put("/api/assignments/:assignmentId", (req, res) => {
-    if (!requireStaffUser(req, res)) {
-      return;
-    }
-    const updatedAssignment = updateAssignment(req.params.assignmentId, req.body);
-    if (!updatedAssignment) {
-      res.status(404).json({ message: "Assignment not found" });
-      return;
-    }
-    res.json(updatedAssignment);
-  });
+  const updateAssignment = async (req, res) => {
+    if (!requireStaffUser(req, res)) return;
+    const status = await dao.updateAssignment(req.params.assignmentId, req.body);
+    res.json(status);
+  };
 
-  app.delete("/api/assignments/:assignmentId", (req, res) => {
-    if (!requireStaffUser(req, res)) {
-      return;
-    }
-    const deleted = deleteAssignment(req.params.assignmentId);
-    if (!deleted) {
-      res.status(404).json({ message: "Assignment not found" });
-      return;
-    }
-    res.json({ assignmentId: req.params.assignmentId });
-  });
+  const deleteAssignment = async (req, res) => {
+    if (!requireStaffUser(req, res)) return;
+    const status = await dao.deleteAssignment(req.params.assignmentId);
+    res.json(status);
+  };
+
+  app.get("/api/assignments", findAllAssignments);
+  app.get("/api/courses/:courseId/assignments", findAssignmentsForCourse);
+  app.post("/api/assignments", createAssignment);
+  app.put("/api/assignments/:assignmentId", updateAssignment);
+  app.delete("/api/assignments/:assignmentId", deleteAssignment);
 }
